@@ -1,0 +1,241 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="App">
+      <UniqueIdentifier>{9adf9407-68cb-41da-bfac-6e5302b48803}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TempLogic">
+      <UniqueIdentifier>{d97fcd18-2338-466e-8f58-c4a86d0f7211}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Entity System">
+      <UniqueIdentifier>{f5e22b82-edd9-4de8-b738-c4b76f8178df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Entity System\Physics">
+      <UniqueIdentifier>{2ec90c05-e9e7-47f9-9b2c-425b9e808de9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Entity System\Rendering">
+      <UniqueIdentifier>{6c2284ad-8ba9-47c1-8569-b76a670d1d9f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Entity System\Locomotion">
+      <UniqueIdentifier>{7d0ed79b-c89d-4b01-8ac3-c72ee684ef11}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Entity System\Locomotion\Gait">
+      <UniqueIdentifier>{1a8f745d-7061-46b5-af79-f2c0a4b030d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Entity System\Transform">
+      <UniqueIdentifier>{08343042-1c8a-40d8-bea5-f141601856f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Entity System\Physics\Constraints">
+      <UniqueIdentifier>{2a8e59a7-f2fd-4a2f-bd98-ab0073a1b58a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Entity System\Physics\Rigidbodies">
+      <UniqueIdentifier>{4709f0b3-8829-48b9-8c31-879bb819cee1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Entity System\Locomotion\Math">
+      <UniqueIdentifier>{f3413dc3-6f95-474a-96cd-94fa125bd592}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Entity System\Locomotion\Data functions">
+      <UniqueIdentifier>{3097fec4-a8ed-4b80-89e3-0289dacd56db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Debug">
+      <UniqueIdentifier>{adc044eb-934a-4e60-a327-20198772625b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Debug\Toolbar">
+      <UniqueIdentifier>{3730e1dd-64c3-4dad-b2cb-1fc20d4fd748}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Entity System\Base">
+      <UniqueIdentifier>{9231d966-1c86-4e65-bf44-c74fa91e67a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Entity System\Locomotion\Controller">
+      <UniqueIdentifier>{bc3d15e0-71fa-42a1-bb76-895501f930ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Entity System\Locomotion\Optimization">
+      <UniqueIdentifier>{5878d7dc-03b4-460d-b931-5fd470fbe3d0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="App.h">
+      <Filter>App</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>TempLogic</Filter>
+    </ClInclude>
+    <ClInclude Include="TempController.h">
+      <Filter>TempLogic</Filter>
+    </ClInclude>
+    <ClInclude Include="PositionSystem.h">
+      <Filter>Entity System</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderComponent.h">
+      <Filter>Entity System\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderSystem.h">
+      <Filter>Entity System\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysicsWorldHandler.h">
+      <Filter>Entity System\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="StepCycle.h">
+      <Filter>Entity System\Locomotion\Gait</Filter>
+    </ClInclude>
+    <ClInclude Include="GaitPlayer.h">
+      <Filter>Entity System\Locomotion\Gait</Filter>
+    </ClInclude>
+    <ClInclude Include="TransformComponent.h">
+      <Filter>Entity System\Transform</Filter>
+    </ClInclude>
+    <ClInclude Include="ConstraintComponent.h">
+      <Filter>Entity System\Physics\Constraints</Filter>
+    </ClInclude>
+    <ClInclude Include="RigidBodySystem.h">
+      <Filter>Entity System\Physics\Rigidbodies</Filter>
+    </ClInclude>
+    <ClInclude Include="RigidBodyComponent.h">
+      <Filter>Entity System\Physics\Rigidbodies</Filter>
+    </ClInclude>
+    <ClInclude Include="JacobianHelper.h">
+      <Filter>Entity System\Locomotion\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="CollisionLayer.h">
+      <Filter>Entity System\Physics\Rigidbodies</Filter>
+    </ClInclude>
+    <ClInclude Include="PieceWiseLinear.h">
+      <Filter>Entity System\Locomotion\Data functions</Filter>
+    </ClInclude>
+    <ClInclude Include="PD.h">
+      <Filter>Entity System\Locomotion\Data functions</Filter>
+    </ClInclude>
+    <ClInclude Include="PID.h">
+      <Filter>Entity System\Locomotion\Data functions</Filter>
+    </ClInclude>
+    <ClInclude Include="Toolbar.h">
+      <Filter>Debug\Toolbar</Filter>
+    </ClInclude>
+    <ClInclude Include="MaterialComponent.h">
+      <Filter>Entity System\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="PDn.h">
+      <Filter>Entity System\Locomotion\Data functions</Filter>
+    </ClInclude>
+    <ClInclude Include="ConstantForceComponent.h">
+      <Filter>Entity System\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="ConstantForceSystem.h">
+      <Filter>Entity System\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Time.h">
+      <Filter>App</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysWorldDefines.h">
+      <Filter>Entity System\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="PositionRefComponent.h">
+      <Filter>Entity System\Transform</Filter>
+    </ClInclude>
+    <ClInclude Include="PositionRefSystem.h">
+      <Filter>Entity System\Transform</Filter>
+    </ClInclude>
+    <ClInclude Include="DebugDrawer.h">
+      <Filter>Entity System\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="DebugDrawBatch.h">
+      <Filter>Entity System\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="ConstraintSystem.h">
+      <Filter>Entity System\Physics\Constraints</Filter>
+    </ClInclude>
+    <ClInclude Include="AdvancedEntitySystem.h">
+      <Filter>Entity System\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="ControllerSystem.h">
+      <Filter>Entity System\Locomotion\Controller</Filter>
+    </ClInclude>
+    <ClInclude Include="ControllerComponent.h">
+      <Filter>Entity System\Locomotion\Controller</Filter>
+    </ClInclude>
+    <ClInclude Include="IK2Handler.h">
+      <Filter>Entity System\Locomotion\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="ControllerOptimizationSystem.h">
+      <Filter>Entity System\Locomotion\Optimization</Filter>
+    </ClInclude>
+    <ClInclude Include="ControllerMovementRecorderComponent.h">
+      <Filter>Entity System\Locomotion\Optimization</Filter>
+    </ClInclude>
+    <ClInclude Include="ReferenceLegMovementController.h">
+      <Filter>Entity System\Locomotion\Optimization</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="App.cpp">
+      <Filter>App</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>TempLogic</Filter>
+    </ClCompile>
+    <ClCompile Include="TempController.cpp">
+      <Filter>TempLogic</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="StepCycle.cpp">
+      <Filter>Entity System\Locomotion\Gait</Filter>
+    </ClCompile>
+    <ClCompile Include="TransformComponent.cpp">
+      <Filter>Entity System\Transform</Filter>
+    </ClCompile>
+    <ClCompile Include="ConstraintComponent.cpp">
+      <Filter>Entity System\Physics\Constraints</Filter>
+    </ClCompile>
+    <ClCompile Include="RigidBodyComponent.cpp">
+      <Filter>Entity System\Physics\Rigidbodies</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderComponent.cpp">
+      <Filter>Entity System\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="RigidBodySystem.cpp">
+      <Filter>Entity System\Physics\Rigidbodies</Filter>
+    </ClCompile>
+    <ClCompile Include="JacobianHelper.cpp">
+      <Filter>Entity System\Locomotion\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="PieceWiseLinear.cpp">
+      <Filter>Entity System\Locomotion\Data functions</Filter>
+    </ClCompile>
+    <ClCompile Include="Toolbar.cpp">
+      <Filter>Debug\Toolbar</Filter>
+    </ClCompile>
+    <ClCompile Include="MaterialComponent.cpp">
+      <Filter>Entity System\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Time.cpp">
+      <Filter>App</Filter>
+    </ClCompile>
+    <ClCompile Include="DebugDrawer.cpp">
+      <Filter>Entity System\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysicsWorldHandler.cpp">
+      <Filter>Entity System\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="DebugDrawBatch.cpp">
+      <Filter>Entity System\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="AdvancedEntitySystem.cpp">
+      <Filter>Entity System\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="ControllerSystem.cpp">
+      <Filter>Entity System\Locomotion\Controller</Filter>
+    </ClCompile>
+    <ClCompile Include="IK2Handler.cpp">
+      <Filter>Entity System\Locomotion\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="ControllerComponent.cpp">
+      <Filter>Entity System\Locomotion\Controller</Filter>
+    </ClCompile>
+    <ClCompile Include="ControllerOptimizationSystem.cpp">
+      <Filter>Entity System\Locomotion\Optimization</Filter>
+    </ClCompile>
+    <ClCompile Include="ControllerMovementRecorderComponent.cpp">
+      <Filter>Entity System\Locomotion\Optimization</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

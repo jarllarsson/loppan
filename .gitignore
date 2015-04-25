@@ -1,0 +1,51 @@
+# Common
+*.pidb
+*.userprefs
+*.suo
+*.zip
+*.rar
+*.exe
+*.sdf
+*.ilk
+*.pdb
+*.opensdf
+*.psess
+*.vspx
+*.lastcodeanalysissucceeded
+*.vsp
+
+
+# C++
+[Oo]bj/
+[Ee]xt/
+[Ll]ib/
+bin/x86/*.txt
+bin/x64/*.txt
+*.PIXRun
+*.opensdf
+*.lib
+# C++ (Exceptions to above)
+# Special for Bulletphysics
+![Ee]xt/Bullet/src/**/*
+![Ee]xt/Bullet/bullet-2.82-r2704/VERSION
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# Directories
+/obj
+/ext
+/ipch
+
+

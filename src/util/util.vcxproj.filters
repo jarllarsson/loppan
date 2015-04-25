@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Debug">
+      <UniqueIdentifier>{6d417b59-cff5-4c3c-acc6-72379e584977}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Exception">
+      <UniqueIdentifier>{b84128aa-380c-4e9e-a931-ff67ad1833ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Measurement">
+      <UniqueIdentifier>{302acab0-053d-43d2-9a82-7355a88c39f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Math">
+      <UniqueIdentifier>{bdb67dff-f98b-4d60-839e-2ba678c0adae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Optimization">
+      <UniqueIdentifier>{80dd1817-7cdf-405a-9205-3af158f9e1e1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DebugPrint.h">
+      <Filter>Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseException.h">
+      <Filter>Exception</Filter>
+    </ClInclude>
+    <ClInclude Include="ToString.h" />
+    <ClInclude Include="Util.h" />
+    <ClInclude Include="ValueClamp.h" />
+    <ClInclude Include="UniqueIndexList.h" />
+    <ClInclude Include="ResourceManager.h" />
+    <ClInclude Include="MeasurementBin.h">
+      <Filter>Measurement</Filter>
+    </ClInclude>
+    <ClInclude Include="CMatrix.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="MathHelp.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Random.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="ColorPalettes.h" />
+    <ClInclude Include="IOptimizable.h">
+      <Filter>Optimization</Filter>
+    </ClInclude>
+    <ClInclude Include="OptimizableHelper.h">
+      <Filter>Optimization</Filter>
+    </ClInclude>
+    <ClInclude Include="ParamChanger.h">
+      <Filter>Optimization</Filter>
+    </ClInclude>
+    <ClInclude Include="FileHandler.h" />
+    <ClInclude Include="SettingsData.h" />
+    <ClInclude Include="CurrentPathHelper.h" />
+    <ClInclude Include="StrTools.h" />
+    <ClInclude Include="RunLengthList.h" />
+    <ClInclude Include="ConsoleContext.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Util.cpp" />
+    <ClCompile Include="MeasurementBin.cpp">
+      <Filter>Measurement</Filter>
+    </ClCompile>
+    <ClCompile Include="MathHelp.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="CMatrix.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="ToString.cpp" />
+    <ClCompile Include="Random.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="ColorPalettes.cpp" />
+    <ClCompile Include="OptimizableHelper.cpp">
+      <Filter>Optimization</Filter>
+    </ClCompile>
+    <ClCompile Include="ParamChanger.cpp">
+      <Filter>Optimization</Filter>
+    </ClCompile>
+    <ClCompile Include="SettingsData.cpp" />
+    <ClCompile Include="CurrentPathHelper.cpp" />
+    <ClCompile Include="StrTools.cpp" />
+    <ClCompile Include="FileHandler.cpp" />
+    <ClCompile Include="ConsoleContext.cpp" />
+  </ItemGroup>
+</Project>
