@@ -314,7 +314,7 @@ void App::run()
 		//dynamicsWorld->stepSimulation((btScalar)fixedStep, 1, (btScalar)fixedStep);
 		unsigned int oldSteps = physicsWorldHandler.getNumberOfInternalSteps();
 		m_time = 0.0;
-		//bool shooting = false;
+		bool shooting = false;
 
 
 		// ===========================================================
@@ -377,32 +377,32 @@ void App::run()
 
 
 					// shoot (temp code)
-					//if (m_input)
-					//{
-					//	if (m_input->g_kb->isKeyDown(KC_X))
-					//	{
-					//		if (!shooting)
-					//		{
-					//			shooting = true;
-					//			artemis::Entity & proj = entityManager->create();
-					//			glm::vec3 pos = MathHelp::toVec3(m_controller->getPos());
-					//			glm::vec3 bfSize = glm::vec3(1.0f, 1.0f, 1.0f);
-					//			RigidBodyComponent* btrb = new RigidBodyComponent(new btBoxShape(btVector3(bfSize.x, bfSize.y, bfSize.z)*0.5f), 10.0f,
-					//				CollisionLayer::COL_DEFAULT, CollisionLayer::COL_DEFAULT | CollisionLayer::COL_CHARACTER);
-					//			proj.addComponent(btrb);
-					//			proj.addComponent(new RenderComponent());
-					//			MaterialComponent* matbx = new MaterialComponent(colarr[((int)m_time)%colarrSz]);
-					//			proj.addComponent(matbx);
-					//			proj.addComponent(new TransformComponent(pos,
-					//				glm::inverse(glm::quat(m_controller->getRotationMatrix())),
-					//				bfSize));
-					//			proj.addComponent(new ConstantForceComponent(MathHelp::transformDirection(glm::inverse(m_controller->getRotationMatrix()), glm::vec3(0, 0, 300.0f)), 1.0f));
-					//			proj.refresh();
-					//		}
-					//	}
-					//	else
-					//		shooting = false;
-					//}
+					if (m_input)
+					{
+						if (m_input->g_kb->isKeyDown(KC_X))
+						{
+							if (!shooting)
+							{
+								shooting = true;
+								artemis::Entity & proj = entityManager->create();
+								glm::vec3 pos = MathHelp::toVec3(m_controller->getPos());
+								glm::vec3 bfSize = glm::vec3(1.0f, 1.0f, 1.0f);
+								RigidBodyComponent* btrb = new RigidBodyComponent(new btBoxShape(btVector3(bfSize.x, bfSize.y, bfSize.z)*0.5f), 10.0f,
+									CollisionLayer::COL_DEFAULT, CollisionLayer::COL_DEFAULT | CollisionLayer::COL_CHARACTER);
+								proj.addComponent(btrb);
+								proj.addComponent(new RenderComponent());
+								MaterialComponent* matbx = new MaterialComponent(colarr[((int)m_time)%colarrSz]);
+								proj.addComponent(matbx);
+								proj.addComponent(new TransformComponent(pos,
+									glm::inverse(glm::quat(m_controller->getRotationMatrix())),
+									bfSize));
+								proj.addComponent(new ConstantForceComponent(MathHelp::transformDirection(glm::inverse(m_controller->getRotationMatrix()), glm::vec3(0, 0, 300.0f)), 1.0f));
+								proj.refresh();
+							}
+						}
+						else
+							shooting = false;
+					}
 
 					handleContext(interval, phys_dt, steps - oldSteps);
 					gameUpdate(interval);

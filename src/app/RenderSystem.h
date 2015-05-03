@@ -95,6 +95,8 @@ public:
 			}		
 			// remove the old buffer
 			SAFE_DELETE(m_instances);
+			// Force immediate release, so we can do this resizing several times in a row.
+			// Release is not done immediately otherwise, and we can get E_OUTOFMEMORY exception from DX)
 			m_graphicsDevice->contextFlush();
 		}
 		else
