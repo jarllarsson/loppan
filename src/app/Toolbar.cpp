@@ -8,8 +8,8 @@ Toolbar::Toolbar(void* p_device) : IContextProcessable()
 	TwInit(TW_DIRECT3D11, p_device);
 
 	m_bars.push_back(Bar("PLAYER"));
-	m_bars.push_back(Bar("PERFORMANCE"));
-	m_bars.push_back(Bar("CHARACTER"));
+	//m_bars.push_back(Bar("PERFORMANCE"));
+	//m_bars.push_back(Bar("CHARACTER"));
 
 	//TwDefine(" GLOBAL fontscaling=0.5 "); // font size must be set before init (exception)
 	init();
@@ -27,8 +27,8 @@ void Toolbar::init()
 	TwDefine(" GLOBAL fontsize=1 ");
 	TwDefine(" GLOBAL fontresizable=false ");
 	defineBarParams(PLAYER, dawnBringerPalRGB[COL_DARKBLUE], " position= '0 0' size='220 400' refresh=0.05");
-	defineBarParams(PERFORMANCE, dawnBringerPalRGB[COL_DARKBROWN], " position= '0 400' size='220 150' refresh=0.05");
-	defineBarParams(CHARACTER, dawnBringerPalRGB[COL_DARKPURPLE], " position= '0 550' size='220 250' refresh=0.05");
+	//defineBarParams(PERFORMANCE, dawnBringerPalRGB[COL_DARKBROWN], " position= '0 400' size='220 150' refresh=0.05");
+	//defineBarParams(CHARACTER, dawnBringerPalRGB[COL_DARKPURPLE], " position= '0 550' size='220 250' refresh=0.05");
 }
 
 bool Toolbar::processEvent(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)

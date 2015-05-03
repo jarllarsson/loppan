@@ -19,8 +19,6 @@
 #include "TempController.h"
 
 #include <iostream> 
-#include <amp.h> 
-#include <ppl.h>
 
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
@@ -39,8 +37,6 @@
 #include "PhysWorldDefines.h"
 #include "PositionRefSystem.h"
 #include "ConstraintSystem.h"
-#include "ControllerOptimizationSystem.h"
-#include "ReferenceLegMovementController.h"
 #include <FileHandler.h>
 #include <SettingsData.h>
 #include <ConsoleContext.h>
@@ -60,17 +56,8 @@ App::App(HINSTANCE p_hInstance, unsigned int p_width/*=1280*/, unsigned int p_he
 	// ====================================
 	m_initWindowWidth = p_width;
 	m_initWindowHeight = p_height;
-	m_runOptimization = false;
-	m_measurePerf = false;
 	m_initWindowMode = true;
-	m_initExecSetup = InitExecSetup::SERIAL;
-	m_initCharCountSerial = 1;
-	m_initParallelInvocCount = 1;
-	m_initCharOffset = 0.0f;
 
-	m_bestParams = NULL;
-
-	m_characterCreateType = CharCreateType::BIPED;
 	m_fpsUpdateTick = 0.0f;
 	m_controller = new TempController(-8.0f, 2.5f, 0.0f, 0.0f);
 	m_controller->rotate(glm::vec3(0.0f, -HALFPI, 0.0f));
@@ -87,57 +74,20 @@ App::App(HINSTANCE p_hInstance, unsigned int p_width/*=1280*/, unsigned int p_he
 	m_timePauseStepToggle = false;
 	m_time = 0.0;
 	m_restart = false;
-	m_saveParams = false;
+
 	m_consoleMode = false;
 	m_measurementRuns = 1;
 	//
 	m_triggerPause = false;
 
-	m_gravityStat = true;
-	m_oldGravityStat = true;
+
 	// ====================================
 	// Member systems
 	// ====================================
 	m_renderSystem = NULL;
 	m_rigidBodySystem = NULL;
-	m_controllerSystem = NULL;
-	m_optimizationSystem = NULL;
 
-	// ====================================
-	// Load settings from file
-	// ====================================
-	SettingsData settingsData;
-	if (loadSettings(settingsData))
-	{
-		initFromSettings(settingsData);
-	}
-	if (m_bestParams == NULL)
-	{
-		bool autoLoad = false;
-		std::string autoLoadPath;
-		if (m_measurePerf)
-		{
-			if (m_characterCreateType == BIPED)
-				autoLoadPath=getAutoLoadFilenameSetting("../autoloadBiped.txt");
-			else
-				autoLoadPath = getAutoLoadFilenameSetting("../autoloadQuadruped.txt");
-			if (autoLoadPath != "") autoLoad = true;
-		}
-		if (!autoLoad)
-		{
-			int filetype = m_characterCreateType == BIPED ? 2 : 3;
-			loadFloatArrayPrompt(m_bestParams, filetype);
-		}
-		else
-		{
-			if (m_bestParams == NULL)
-				m_bestParams = new std::vector<float>();
-			loadFloatArray(m_bestParams, "../output/sav/"+autoLoadPath);
-		}
-	}
-	if (m_runOptimization || m_measurePerf) // no matter load settings, we don't pause at optimization
-		m_triggerPause = false;
-	// ====================================
+
 
 	// ====================================
 	// Environment init
@@ -147,7 +97,7 @@ App::App(HINSTANCE p_hInstance, unsigned int p_width/*=1280*/, unsigned int p_he
 	{
 		try
 		{
-			m_context = new Context(p_hInstance, "multileg",
+			m_context = new Context(p_hInstance, "loppan",
 				m_initWindowWidth, m_initWindowHeight);
 		}
 		catch (ContextException& e)
@@ -192,8 +142,6 @@ App::App(HINSTANCE p_hInstance, unsigned int p_width/*=1280*/, unsigned int p_he
 		m_toolBar->addReadWriteVariable(Toolbar::PLAYER, "Physics time scale", Toolbar::FLOAT, &m_timeScale);
 		m_toolBar->addButton(Toolbar::PLAYER, "Play/Pause", boolButton, (void*)&m_triggerPause);
 		m_toolBar->addButton(Toolbar::PLAYER, "Restart", boolButton, (void*)&m_restart);
-		m_toolBar->addButton(Toolbar::PLAYER, "Save", boolButton, (void*)&m_saveParams);
-		m_toolBar->addReadWriteVariable(Toolbar::PLAYER, "Gravity", Toolbar::BOOL, &m_gravityStat);
 	}
 	// ====================================
 }
@@ -221,69 +169,17 @@ App::~App()
 
 void App::run()
 {
-	// Optimization init
-	int optimizationIterationCount = 0;
-	double bestOptimizationScore = FLT_MAX;
-	double oldFirstOptimizationScore = FLT_MAX;
-	std::vector<double> allOptimizationResults;
-	int fixedStepCounter = 0;
-	std::vector<ReferenceLegMovementController> baseOptimizationReferenceMovementControllers;
-	if (m_runOptimization && m_toolBar)
-	{
-		m_toolBar->addReadOnlyVariable(Toolbar::PERFORMANCE, "O-Tick", Toolbar::INT, &fixedStepCounter);
-		m_toolBar->addReadOnlyVariable(Toolbar::PERFORMANCE, "O-Score", Toolbar::DOUBLE, &bestOptimizationScore);
-		m_toolBar->addReadOnlyVariable(Toolbar::PERFORMANCE, "O-Iter", Toolbar::INT, &optimizationIterationCount);
-	}
 	// Normal inits
+	int fixedStepCounter = 0;
 	bool dbgDrawAllChars = true;
 	double controllerSystemTimingMs = 0.0;
 	bool lockLFY_onRestart = false;
 	if (m_toolBar)
 	{
-		m_toolBar->addReadOnlyVariable(Toolbar::PERFORMANCE, "CSystem Timing(ms)", Toolbar::DOUBLE, &controllerSystemTimingMs);
-		m_toolBar->addReadOnlyVariable(Toolbar::PERFORMANCE, "Tick", Toolbar::INT, &fixedStepCounter);
-		m_toolBar->addReadWriteVariable(Toolbar::PLAYER, "Lock LF Y (onRestart)", Toolbar::BOOL, &lockLFY_onRestart);
-		m_toolBar->addSeparator(Toolbar::PLAYER, "Torques");
-		m_toolBar->addReadWriteVariable(Toolbar::PLAYER, "t Limit", Toolbar::FLOAT, &ControllerSystem::m_torqueLim);
-		m_toolBar->addReadWriteVariable(Toolbar::PLAYER, "Use LF feedbk", Toolbar::BOOL, &ControllerSystem::m_useLFFeedbackTorque);
-		m_toolBar->addReadWriteVariable(Toolbar::PLAYER, "Use VF t", Toolbar::BOOL, &ControllerSystem::m_useVFTorque);
-		m_toolBar->addReadWriteVariable(Toolbar::PLAYER, "Use GCVF t", Toolbar::BOOL, &ControllerSystem::m_useGCVFTorque);
-		m_toolBar->addReadWriteVariable(Toolbar::PLAYER, "Use PD t", Toolbar::BOOL, &ControllerSystem::m_usePDTorque);
-		m_toolBar->addSeparator(Toolbar::PLAYER, "Visual Debug");
 		if (m_debugDrawBatch) m_toolBar->addReadWriteVariable(Toolbar::PLAYER, "Enable DbgDraw", Toolbar::BOOL, &m_debugDrawBatch->m_enabled);
-		m_toolBar->addReadWriteVariable(Toolbar::PLAYER, "Show VF vectors (grn)", Toolbar::BOOL, &ControllerSystem::m_dbgShowVFVectors);
-		m_toolBar->addReadWriteVariable(Toolbar::PLAYER, "Show GCVF vectors (pnk)", Toolbar::BOOL, &ControllerSystem::m_dbgShowGCVFVectors);
-		m_toolBar->addReadWriteVariable(Toolbar::PLAYER, "Show torque axes (blu)", Toolbar::BOOL, &ControllerSystem::m_dbgShowTAxes);
-		m_toolBar->addReadWriteVariable(Toolbar::PLAYER, "Draw All Chars", Toolbar::BOOL, &dbgDrawAllChars);
 	}
 
 
-	ControllerSystem::m_useLFFeedbackTorque = true;
-	ControllerSystem::m_useVFTorque = true;
-	ControllerSystem::m_useGCVFTorque = true;
-	ControllerSystem::m_usePDTorque = true;
-	bool optRealTimeMode = false;
-	if (m_runOptimization)
-	{
-		ControllerSystem::m_usePDTorque = true;
-		ControllerSystem::m_dbgShowVFVectors = false;
-		ControllerSystem::m_dbgShowGCVFVectors = false;
-		ControllerSystem::m_dbgShowTAxes = false;
-		optRealTimeMode = false;
-	}
-
-	MeasurementBin<std::vector<float>> controllerPerfRecorder;
-	// The controller measurement is activated
-	// if measurement is turned on in settings:
-	if (m_measurePerf)
-	{
-		controllerPerfRecorder.activate();
-		m_restart = true;
-	}
-	int perfRuns = m_measurementRuns;
-
-
-	
 
 	// ===========================================================
 	// 
@@ -337,39 +233,17 @@ void App::run()
 		//MovementSystem * movementsys = (MovementSystem*)sm->setSystem(new MovementSystem());
 		//addGameLogic(movementsys);
 #ifdef MEASURE_RBODIES
-		if (m_runOptimization)
-			m_rigidBodySystem = (RigidBodySystem*)sysManager->setSystem(new RigidBodySystem(dynamicsWorld,&rigidBodyStateDbgRecorder,true));
-		else
-			m_rigidBodySystem = (RigidBodySystem*)sysManager->setSystem(new RigidBodySystem(dynamicsWorld, &rigidBodyStateDbgRecorder));
+		m_rigidBodySystem = (RigidBodySystem*)sysManager->setSystem(new RigidBodySystem(dynamicsWorld, &rigidBodyStateDbgRecorder));
 #else
-		if (m_runOptimization)
-			m_rigidBodySystem = (RigidBodySystem*)sysManager->setSystem(new RigidBodySystem(dynamicsWorld, NULL, true));
-		else
-			m_rigidBodySystem = (RigidBodySystem*)sysManager->setSystem(new RigidBodySystem(dynamicsWorld));
+
+		m_rigidBodySystem = (RigidBodySystem*)sysManager->setSystem(new RigidBodySystem(dynamicsWorld));
 #endif
-		ConstantForceSystem* cforceSystem = (ConstantForceSystem*)sysManager->setSystem(new ConstantForceSystem());
-		//ConstraintSystem* constraintSystem = (ConstraintSystem*)sysManager->setSystem(new ConstraintSystem(dynamicsWorld));
+		//ConstantForceSystem* cforceSystem = (ConstantForceSystem*)sysManager->setSystem(new ConstantForceSystem());
+
 		if (!m_consoleMode)
 			m_renderSystem = (RenderSystem*)sysManager->setSystem(new RenderSystem(m_graphicsDevice));
-		ControllerSystem::ExecutionLayout execMode = ControllerSystem::SERIAL;
-		if (m_initExecSetup == InitExecSetup::PARALLEL)
-		{
-			execMode = ControllerSystem::PARALLEL;
-			if (m_toolBar) m_toolBar->addLabel(Toolbar::PERFORMANCE, ("PARALLEL ( " + ToString(m_initParallelInvocCount) + " t)x( " + ToString(m_initCharCountSerial / m_initParallelInvocCount) + " c)").c_str());
-		}
-		else
-		{
-			if (m_toolBar) m_toolBar->addLabel(Toolbar::PERFORMANCE, ("SERIAL ( "+ToString(m_initCharCountSerial)+" c)").c_str() );
-		}
-		m_controllerSystem = (ControllerSystem*)sysManager->setSystem(new ControllerSystem(execMode,
-																							m_initParallelInvocCount,
-																						   &controllerPerfRecorder));
 		PositionRefSystem* posRefSystem = (PositionRefSystem*)sysManager->setSystem(new PositionRefSystem());
-		m_optimizationSystem = NULL;
-		if (m_runOptimization)
-		{
-			m_optimizationSystem = (ControllerOptimizationSystem*)sysManager->setSystem(new ControllerOptimizationSystem(m_optmesSteps));
-		}
+
 
 		ConstraintSystem* constraintSystem = (ConstraintSystem*)sysManager->setSystem(new ConstraintSystem(dynamicsWorld));
 		sysManager->initializeAll();
@@ -378,14 +252,10 @@ void App::run()
 		// Order independent
 		addOrderIndependentSystem(constraintSystem);
 		addOrderIndependentSystem(posRefSystem);
-		if (m_runOptimization)
-		{
-			addOrderIndependentSystem(m_optimizationSystem);
-		}
 
 		// Combine Physics with our stuff!
-		PhysicsWorldHandler physicsWorldHandler(dynamicsWorld, m_controllerSystem);
-		physicsWorldHandler.addOrderIndependentSystem(cforceSystem);
+		PhysicsWorldHandler physicsWorldHandler(dynamicsWorld/*, m_controllerSystem*/);
+		//physicsWorldHandler.addOrderIndependentSystem(cforceSystem);
 		physicsWorldHandler.addPreprocessSystem(m_rigidBodySystem);
 
 
@@ -406,6 +276,7 @@ void App::run()
 
 
 		// Test of controller
+#ifdef CHARSIM
 		float scale = 2.0f;
 		float hipCoronalOffset = scale*0.2f; // coronal distance between hip joints and center
 		glm::vec3 bodOffset;
@@ -996,11 +867,14 @@ void App::run()
 		{
 			m_optimizationSystem->initSim(bestOptimizationScore, m_bestParams);
 		}
+#endif
 
 #ifdef MEASURE_RBODIES
 		rigidBodyStateDbgRecorder.activate();
 #endif
 
+
+		// debug boxes
 		for (int x = 0; x < 10; x++)
 		for (int y = 0; y < 10; y++)
 		for (int z = 0; z < 10; z++)
@@ -1014,10 +888,11 @@ void App::run()
 			boxx.addComponent(new RenderComponent());
 			MaterialComponent* matbx = new MaterialComponent(colarr[x % colarrSz]);
 			boxx.addComponent(matbx);
-			boxx.addComponent(new TransformComponent(pos,
-				glm::inverse(glm::quat(m_controller->getRotationMatrix())),
-				bfSize));
-			boxx.addComponent(new ConstantForceComponent(MathHelp::transformDirection(glm::inverse(m_controller->getRotationMatrix()), glm::vec3(0, 0, 300.0f)), 1.0f));
+			boxx.addComponent(new TransformComponent(pos));
+			//boxx.addComponent(new TransformComponent(pos,
+			//	glm::inverse(glm::quat(m_controller->getRotationMatrix())),
+			//	bfSize));
+			//boxx.addComponent(new ConstantForceComponent(MathHelp::transformDirection(glm::inverse(m_controller->getRotationMatrix()), glm::vec3(0, 0, 300.0f)), 1.0f));
 			boxx.refresh();
 		}
 
@@ -1029,15 +904,16 @@ void App::run()
 		// lets non-context systems quit the program
 		bool run = true;
 
-		double fixedStep = 1.0 / 60.0;
-		double physicsStep = 1.0 / 120.0;
+		//double fixedStep = 1.0 / 60.0;
+		double physicsStep = 1.0 / 60.0;
 
 		// Dry run, so artemis have run before physics first step
 		gameUpdate(0.0f);
 		//dynamicsWorld->stepSimulation((btScalar)fixedStep, 1, (btScalar)fixedStep);
 		unsigned int oldSteps = physicsWorldHandler.getNumberOfInternalSteps();
 		m_time = 0.0;
-		bool shooting = false;
+		//bool shooting = false;
+#ifdef OPTIMSIM
 		double optimizationDbgMaxscoreelem = 1.0f, 
 			optimizationDbgBparamsmaxelem = 1.0f, 
 			optimizationDbgBparamsminelem = 0.0f;
@@ -1050,6 +926,7 @@ void App::run()
 				optimizationDbgBparamsminelem = *std::min_element(m_bestParams->begin(), m_bestParams->end());
 			}
 		}
+#endif
 
 		// ===========================================================
 		// 
@@ -1064,14 +941,8 @@ void App::run()
 			double startFrameTimeMs = Time::getTimeSeconds()*1000.0;
 			if (!pumpMessage(msg))
 			{				
-				// update timing debug var
-				controllerSystemTimingMs = m_controllerSystem->getLatestTiming() * 1000.0f;
-				if (m_consoleMode)
-					DEBUGPRINT((("\nController System(ms): "+ToString(controllerSystemTimingMs)).c_str()));
 
 				drawDebugAxes();
-				drawDebugOptimizationGraphs(&allOptimizationResults, optimizationDbgMaxscoreelem, 
-					optimizationDbgBparamsmaxelem, optimizationDbgBparamsminelem);
 				
 				// ====================================
 				//			   Render 3D
@@ -1089,105 +960,22 @@ void App::run()
 				currTimeStamp = Time::getTimeStamp();
 				double phys_dt = (double)m_timeScale*(double)(currTimeStamp.QuadPart - prevTimeStamp.QuadPart) * secondsPerTick;
 
-
-				if (m_gravityStat != m_oldGravityStat)
-				{
-					if (m_gravityStat)
-						dynamicsWorld->setGravity(btVector3(0, WORLD_GRAVITY, 0));
-					else
-						dynamicsWorld->setGravity(btVector3(0, 0.0f, 0));
-				}
-
 				// Tick the bullet world. Keep in mind that bullet takes seconds
 				// timeStep < maxSubSteps * fixedTimeStep
-	#if defined(MEASURE_RBODIES)
-				if (!optRealTimeMode)
-					dynamicsWorld->stepSimulation((btScalar)(double)m_timeScale*fixedStep, 1+(physicsStep / (m_timeScale*fixedStep)), (btScalar)physicsStep/*(btScalar)(double)m_timeScale*(1.0f / 1000.0f)*/);
-				else
-					dynamicsWorld->stepSimulation((btScalar)phys_dt/*, 10*/, 10, (btScalar)physicsStep);
-	#else
-				if (m_runOptimization || m_measurePerf)
-				{
-					if (!optRealTimeMode)
-						dynamicsWorld->stepSimulation((btScalar)(double)m_timeScale*fixedStep, 1 + (physicsStep / (m_timeScale*fixedStep)), (btScalar)physicsStep/*(btScalar)(double)m_timeScale*(1.0f / 1000.0f)*/);
-					else
-						dynamicsWorld->stepSimulation((btScalar)phys_dt/*, 10*/, 10, (btScalar)physicsStep);
-				}
-				else
-					dynamicsWorld->stepSimulation((btScalar)phys_dt/*, 10*/,  1, (btScalar)physicsStep);
-	#endif
+				dynamicsWorld->stepSimulation((btScalar)phys_dt/*, 10*/,  1, (btScalar)physicsStep);
 				// ========================================================
 
 				unsigned int steps = physicsWorldHandler.getNumberOfInternalSteps();
 
 				prevTimeStamp = currTimeStamp;
 
-	#ifdef MEASURE_RBODIES
-				if (m_runOptimization)
-				{
-					if (optimizationIterationCount >= 5) run = false;
-				}
-				else
-				{
-					if (steps >= 600) run = false;
-				}
-	#endif
-				if (m_runOptimization)
-				{
-					if (!optRealTimeMode)
-					{
-						if (m_timeScale > 0)
-						{
-							m_optimizationSystem->incSimTick();
-							m_optimizationSystem->stepTime((double)m_timeScale*fixedStep);
-						}					
-						fixedStepCounter = m_optimizationSystem->getCurrentSimTicks(); // ticker only for debug print
-						if (m_optimizationSystem->isSimCompleted(m_timeScale))
-						{
-							DEBUGPRINT((" NO: "));
-							DEBUGPRINT((ToString(optimizationIterationCount).c_str()));
-							run = false;
-							m_restart = true;
-						}
-					}
-				}
-				if (m_measurePerf)
-				{
-					fixedStepCounter++;
-					DEBUGPRINT((("\n" + ToString(fixedStepCounter)).c_str()));
-					if (fixedStepCounter >= m_optmesSteps)
-					{
-						run = false;
-						perfRuns--;
-						if (perfRuns > 0)
-							m_restart = true;
-						else
-							m_restart = false;
-					}
-				}
-				//DEBUGPRINT(((string("\n\nstep: ") + ToString(steps)).c_str()));
-				//if (steps >= 1000) run = false;
+	
+
 				// Game Clock part of the loop
 				// ========================================================
 				double dt=0.0;
-	#if defined(MEASURE_RBODIES)
-				if (!optRealTimeMode)
-					dt = fixedStep;
-				else
-					dt = ((double)Time::getTimeStamp().QuadPart*secondsPerTick - gameClockTimeOffset);
-	#else
-				if (m_runOptimization || m_measurePerf)
-				{
-					if (!optRealTimeMode)
-						dt = fixedStep;
-					else
-						dt = ((double)Time::getTimeStamp().QuadPart*secondsPerTick - gameClockTimeOffset);
-				}
-				else
-				{
-					dt = ((double)Time::getTimeStamp().QuadPart*secondsPerTick - gameClockTimeOffset);
-				}
-	#endif
+				dt = ((double)Time::getTimeStamp().QuadPart*secondsPerTick - gameClockTimeOffset);
+
 				// Game clock based updates
 				while (dt >= gameTickS)
 				{
@@ -1200,37 +988,32 @@ void App::run()
 
 
 					// shoot (temp code)
-					if (m_input)
-					{
-						if (m_input->g_kb->isKeyDown(KC_X))
-						{
-							if (!shooting)
-							{
-								shooting = true;
-								artemis::Entity & proj = entityManager->create();
-								glm::vec3 pos = MathHelp::toVec3(m_controller->getPos());
-								glm::vec3 bfSize = glm::vec3(1.0f, 1.0f, 1.0f);
-								RigidBodyComponent* btrb = new RigidBodyComponent(new btBoxShape(btVector3(bfSize.x, bfSize.y, bfSize.z)*0.5f), 10.0f,
-									CollisionLayer::COL_DEFAULT, CollisionLayer::COL_DEFAULT | CollisionLayer::COL_CHARACTER);
-								proj.addComponent(btrb);
-								proj.addComponent(new RenderComponent());
-								MaterialComponent* matbx = new MaterialComponent(colarr[((int)m_time)%colarrSz]);
-								proj.addComponent(matbx);
-								proj.addComponent(new TransformComponent(pos,
-									glm::inverse(glm::quat(m_controller->getRotationMatrix())),
-									bfSize));
-								proj.addComponent(new ConstantForceComponent(MathHelp::transformDirection(glm::inverse(m_controller->getRotationMatrix()), glm::vec3(0, 0, 300.0f)), 1.0f));
-								proj.refresh();
-							}
-						}
-						else
-							shooting = false;
-
-						if (m_runOptimization)
-						{
-							optRealTimeMode = m_input->g_kb->isKeyDown(KC_P);
-						}
-					}
+					//if (m_input)
+					//{
+					//	if (m_input->g_kb->isKeyDown(KC_X))
+					//	{
+					//		if (!shooting)
+					//		{
+					//			shooting = true;
+					//			artemis::Entity & proj = entityManager->create();
+					//			glm::vec3 pos = MathHelp::toVec3(m_controller->getPos());
+					//			glm::vec3 bfSize = glm::vec3(1.0f, 1.0f, 1.0f);
+					//			RigidBodyComponent* btrb = new RigidBodyComponent(new btBoxShape(btVector3(bfSize.x, bfSize.y, bfSize.z)*0.5f), 10.0f,
+					//				CollisionLayer::COL_DEFAULT, CollisionLayer::COL_DEFAULT | CollisionLayer::COL_CHARACTER);
+					//			proj.addComponent(btrb);
+					//			proj.addComponent(new RenderComponent());
+					//			MaterialComponent* matbx = new MaterialComponent(colarr[((int)m_time)%colarrSz]);
+					//			proj.addComponent(matbx);
+					//			proj.addComponent(new TransformComponent(pos,
+					//				glm::inverse(glm::quat(m_controller->getRotationMatrix())),
+					//				bfSize));
+					//			proj.addComponent(new ConstantForceComponent(MathHelp::transformDirection(glm::inverse(m_controller->getRotationMatrix()), glm::vec3(0, 0, 300.0f)), 1.0f));
+					//			proj.refresh();
+					//		}
+					//	}
+					//	else
+					//		shooting = false;
+					//}
 
 					handleContext(interval, phys_dt, steps - oldSteps);
 					gameUpdate(interval);
@@ -1238,7 +1021,6 @@ void App::run()
 
 				// ========================================================
 				oldSteps = physicsWorldHandler.getNumberOfInternalSteps();
-				m_oldGravityStat = m_gravityStat;
 				//
 			}
 
@@ -1251,107 +1033,7 @@ void App::run()
 		if (!m_restart)
 			DEBUGPRINT(("\n\nSTOPPING APPLICATION\n\n"));
 
-		if (m_runOptimization)
-		{
-			if (m_restart)
-			{
-				m_optimizationSystem->evaluateAll();
-				m_optimizationSystem->findCurrentBestCandidate();
-				double oldbestscore = bestOptimizationScore;
-				double firstScore = m_optimizationSystem->getScoreOf(0);
-				bestOptimizationScore = m_optimizationSystem->getWinnerScore();
-				//if (firstScore!=oldbestscore)
-				{
-					DEBUGPRINT(("\n========================================================================"));
-					if (firstScore != oldbestscore)
-						DEBUGPRINT((("\nNot deterministic!: new best=" + ToString(bestOptimizationScore) + "\n").c_str()));
-					else
-						DEBUGPRINT((("\nnew best=" + ToString(bestOptimizationScore) + "\n").c_str()));
-					DEBUGPRINT((("\nold best=" + ToString(oldbestscore) + "\nold first=" + ToString(oldFirstOptimizationScore) + " new first=" + ToString(firstScore) + "\n").c_str()));
-					std::vector<float> parms = m_optimizationSystem->getParamsOf(0);
-					for (int i = 0; i < parms.size(); i++)
-					{
-						DEBUGPRINT(((ToString(parms[i]) + " ").c_str()));
-					}
-					DEBUGPRINT(("\n========================================================================\n"));
-				}
-				DEBUGPRINT((("\nbestscore: " + ToString(bestOptimizationScore)).c_str()));
-				optimizationIterationCount++;
-				fixedStepCounter = 0;
-				SAFE_DELETE(m_bestParams);
-				m_bestParams = new std::vector<float>(m_optimizationSystem->getWinnerParams());
-				allOptimizationResults.push_back(bestOptimizationScore);
-				oldFirstOptimizationScore = firstScore;
-			}
-		}
 
-		if (m_measurePerf)
-		{
-			fixedStepCounter = 0;
-		}
-
-
-	#ifdef MEASURE_RBODIES
-		rigidBodyStateDbgRecorder.saveMeasurement("Time: "+ToString(time));
-		rigidBodyStateDbgRecorder.saveMeasurement("Steps: "+ToString(physicsWorldHandler.getNumberOfInternalSteps()));
-	#ifndef MULTI
-	#ifdef _DEBUG
-		rigidBodyStateDbgRecorder.saveResultsCSV("../output/determinismTest_Debug_STCPU");
-	#else
-		rigidBodyStateDbgRecorder.saveResultsCSV("../output/determinismTest_Release_STCPU");
-	#endif
-	#else
-	#ifdef _DEBUG
-		rigidBodyStateDbgRecorder.saveResultsCSV("../output/determinismTest_Debug_MTCPU");
-	#else
-		rigidBodyStateDbgRecorder.saveResultsCSV("../output/determinismTest_Release_MTCPU");
-	#endif
-	#endif
-	#endif
-		///////////////////////////////////
-
-		// Save measurements (only if any were taken)
-		// for when we have means and standard deviation
-		if (controllerPerfRecorder.isActive() && !m_restart)
-		{
-			int testUID = 0;
-			std::string podFileSuffix = "";
-			if (m_characterCreateType == CharCreateType::BIPED)
-				podFileSuffix = "BIPED";
-			else
-				podFileSuffix = "QUADRUPED";
-
-			std::string collectionfile;
-
-			controllerPerfRecorder.finishRound();
-			if (m_initExecSetup == InitExecSetup::SERIAL)
-			{
-#ifdef _DEBUG
-				controllerPerfRecorder.saveResultsGNUPLOT("../output/graphs/perf_serial_D");
-#else
-				controllerPerfRecorder.saveResultsGNUPLOT("../output/graphs/perf_serial" + ToString(m_initCharCountSerial) + podFileSuffix);
-#endif
-				// get file name for collection file
-				collectionfile = "../output/graphs/CollectedRunsResultSerial" + podFileSuffix + ".gnuplot.txt";
-			}
-			else
-			{
-#ifdef _DEBUG
-				controllerPerfRecorder.saveResultsGNUPLOT("../output/graphs/perf_parallel_D");
-#else
-				controllerPerfRecorder.saveResultsGNUPLOT("../output/graphs/perf_parallel" + ToString(m_initCharCountSerial) + podFileSuffix + "_thread" + ToString(m_initParallelInvocCount));
-#endif
-				// get file name for collection file
-				collectionfile = "../output/graphs/CollectedRunsResultParallel" + podFileSuffix + ToString(m_initParallelInvocCount) + ".gnuplot.txt";
-			}
-			testUID = m_initCharCountSerial - 1; // 1 char=idx 0
-		
-
-			// Save total avg and std to collection
-			saveMeasurementToCollectionFileAtRow(collectionfile, 
-				controllerPerfRecorder.getMean(), controllerPerfRecorder.getSTD(), testUID);
-
-		}
 
 		// Clean up
 		// artemis
@@ -1361,8 +1043,6 @@ void App::run()
 		m_world.getSystemManager()->getSystems().deleteData();
 		m_rigidBodySystem=NULL;
 		m_renderSystem=NULL;
-		m_controllerSystem=NULL;
-		m_optimizationSystem = NULL;
 
 		// bullet
 		//cleanup in the reverse order of creation/initialization
@@ -1385,13 +1065,8 @@ void App::run()
 		delete solver;
 		delete dynamicsWorld;
 
-
-		// debug
-		if (m_toolBar) m_toolBar->clearBar(Toolbar::CHARACTER);
 	} while (m_restart);
 #pragma endregion mainrestartloop
-
-	SAFE_DELETE(m_bestParams);
 }
 
 
@@ -1516,14 +1191,6 @@ void App::gameUpdate( double p_dt )
 	float dt = (float)p_dt;
 	float game_dt = m_timeScale*(float)p_dt;
 
-	// Handle saving
-	if (m_saveParams)
-	{
-		if (m_bestParams != NULL)
-			saveFloatArrayPrompt(m_bestParams, 
-								 m_characterCreateType == BIPED ? 2 : 3);
-		m_saveParams = false;
-	}
 
 	// temp controller update code
 	if (m_input)
@@ -1586,9 +1253,7 @@ void App::gameUpdate( double p_dt )
 	// Physics result gathering have to run first
 	m_rigidBodySystem->executeDeferredConstraintInits();
 	m_rigidBodySystem->process();
-	m_controllerSystem->process();
 	m_rigidBodySystem->lateUpdate();
-	m_controllerSystem->buildCheck();
 	// // Run all other systems, for which order doesn't matter
 	processSystemCollection(&m_orderIndependentSystems);
 	// // Render system is processed last
@@ -1636,63 +1301,6 @@ void App::processSystemCollection(vector<artemis::EntityProcessingSystem*>* p_sy
 	}
 }
 
-void App::initFromSettings(SettingsData& p_settings)
-{
-	m_initWindowMode = !p_settings.m_fullscreen;
-	if (p_settings.m_appMode == "c")
-	{
-		m_consoleMode = true;
-	}
-	else
-	{
-		m_consoleMode = false;
-	}
-	m_initWindowWidth = p_settings.m_wwidth;
-	m_initWindowHeight = p_settings.m_wheight;
-	if (p_settings.m_simMode == "o")
-	{
-		m_runOptimization = true;
-	}
-	else if (p_settings.m_simMode == "m")
-	{
-		m_measurePerf = true;
-	}
-	else
-	{
-		m_runOptimization = false;
-		m_measurePerf = false;
-	}
-	m_measurementRuns = max(1,p_settings.m_measurementRuns);
-	if (p_settings.m_pod == "q")
-		m_characterCreateType = CharCreateType::QUADRUPED;
-	else
-		m_characterCreateType = CharCreateType::BIPED;
-	
-	if (p_settings.m_execMode == "p")
-		m_initExecSetup = InitExecSetup::PARALLEL;
-	else
-		m_initExecSetup = InitExecSetup::SERIAL;
-	m_initCharCountSerial=p_settings.m_charcount_serial;
-	m_initParallelInvocCount=p_settings.m_parallel_invocs;
-	m_initCharOffset=p_settings.m_charOffsetX;
-	m_triggerPause = p_settings.m_startPaused;
-	// TODO: 
-	// Optimization and measurement steps
-	m_optmesSteps = p_settings.m_optmesSteps;
-	// 
-	// Optimization weights
-	/*	fd
-		1000.0
-		fv
-		0.1
-		fh
-		0.0
-		fr
-		0.1
-		fp
-		0.0
-		*/
-}
 
 void App::drawDebugAxes()
 {
@@ -1702,54 +1310,5 @@ void App::drawDebugAxes()
 		m_debugDrawBatch->drawLine(glm::vec3(0.0f), glm::vec3(10.0f, 0.0f, 0.0f), colarr[0], colarr[1]);
 		m_debugDrawBatch->drawLine(glm::vec3(0.0f), glm::vec3(0.0f, 10.0f, 0.0f), colarr[3], colarr[4]);
 		m_debugDrawBatch->drawLine(glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 10.0f), dawnBringerPalRGB[COL_NAVALBLUE], dawnBringerPalRGB[COL_LIGHTBLUE]);
-	}
-}
-
-void App::drawDebugOptimizationGraphs( std::vector<double>* p_optimizationResults, 
-	float p_maxScore, float p_pmax, float p_pmin )
-{
-	// ====================================
-	//    Draw test graph if optimizing
-	// ====================================
-	if (m_debugDrawBatch && m_runOptimization)
-	{
-		int vals = p_optimizationResults->size();
-		float grphScale = 20.0f;
-		if (vals > 1)
-		{
-			m_debugDrawBatch->drawLine(glm::vec3(-10.0f, 20.0f, 0.0f), glm::vec3(10.0f, 20.0f, 0.0f), Color3f(0.0f, 0.0f, 0.0f), Color3f(1.0f, 1.0f, 1.0f));
-
-			for (int i = 0; i < vals - 1; i++)
-			{
-				m_debugDrawBatch->drawLine(
-					glm::vec3(((float)i / (float)vals)*20.0f - 10.0f, grphScale * 2 + ((*p_optimizationResults)[i] / (0.0001f + p_maxScore))*grphScale, 0.0f),
-					glm::vec3((((float)i + 1.0f) / (float)vals)*20.0f - 10.0f, grphScale * 2 + ((*p_optimizationResults)[i + 1] / (0.0001f + p_maxScore))*grphScale, 0.0f),
-					colarr[i% colarrSz], colarr[(i + 1) % colarrSz]);
-			}
-		}
-		// params	
-		for (int i = 0; i < m_optimizationSystem->getEntityCount(); i++)
-		{
-			std::vector<float>* p = m_optimizationSystem->getCurrentParamsOf(i);
-			vals = p->size();
-			for (int i = 0; i < vals - 1; i++)
-			{
-				m_debugDrawBatch->drawLine(
-					glm::vec3(((float)i / (float)vals)*20.0f - 10.0f, -2 * grphScale + ((*p)[i] / (0.0001f + p_pmax - p_pmin))*grphScale, 0.0f),
-					glm::vec3((((float)i + 1.0f) / (float)vals)*20.0f - 10.0f, -2 * grphScale + ((*p)[i + 1] / (0.0001f + p_pmax - p_pmin))*grphScale, 0.0f),
-					Color3f((float)i / (float)vals, 0.0f, 1.0f - (float)i / (float)vals));
-			}
-		}
-		if (m_bestParams != NULL)
-		{
-			vals = m_bestParams->size();
-			for (int i = 0; i < vals - 1; i++)
-			{
-				m_debugDrawBatch->drawLine(
-					glm::vec3(((float)i / (float)vals)*20.0f - 10.0f, -2 * grphScale + ((*m_bestParams)[i] / (0.0001f + p_pmax - p_pmin))*grphScale, 0.0f),
-					glm::vec3((((float)i + 1.0f) / (float)vals)*20.0f - 10.0f, -2 * grphScale + ((*m_bestParams)[i + 1] / (0.0001f + p_pmax - p_pmin))*grphScale, 0.0f),
-					Color3f(0.0f, 0.0f, 0.0f));
-			}
-		}
 	}
 }

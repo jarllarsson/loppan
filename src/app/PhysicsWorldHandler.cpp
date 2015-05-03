@@ -11,10 +11,18 @@ void physicsSimulationTickCallback(btDynamicsWorld *world, btScalar timeStep) {
 	w->physProcessCallback(timeStep);
 }
 
-PhysicsWorldHandler::PhysicsWorldHandler(btDynamicsWorld* p_world, ControllerSystem* p_controllerSystem)
+//PhysicsWorldHandler::PhysicsWorldHandler(btDynamicsWorld* p_world, ControllerSystem* p_controllerSystem)
+//{
+//	m_world = p_world;
+//	m_controllerSystem = p_controllerSystem;
+//	m_world->setInternalTickCallback(physicsSimulationTickCallback, static_cast<void *>(this), true);
+//	m_internalStepCounter = 0;
+//}
+
+PhysicsWorldHandler::PhysicsWorldHandler(btDynamicsWorld* p_world)
 {
 	m_world = p_world;
-	m_controllerSystem = p_controllerSystem;
+	//m_controllerSystem = p_controllerSystem;
 	m_world->setInternalTickCallback(physicsSimulationTickCallback, static_cast<void *>(this), true);
 	m_internalStepCounter = 0;
 }
@@ -26,10 +34,10 @@ void PhysicsWorldHandler::physProcessCallback(btScalar timeStep)
 	// Collisions readback for rigidbodies that has it enabled
 	handleCollisions();
 	//// Character controller
-	m_controllerSystem->fixedUpdate((float)timeStep); // might want this in post tick instead? Have it here for now
+	//m_controllerSystem->fixedUpdate((float)timeStep); // might want this in post tick instead? Have it here for now
 	//// Controller
-	m_controllerSystem->finish();
-	m_controllerSystem->applyTorques((float)timeStep);
+	//m_controllerSystem->finish();
+	//m_controllerSystem->applyTorques((float)timeStep);
 	// Other systems
 	processOrderIndependentSystemCollection((float)timeStep);
 	return;

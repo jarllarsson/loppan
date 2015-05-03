@@ -24,7 +24,8 @@ static void physicsSimulationTickCallback(btDynamicsWorld *world, btScalar timeS
 
 class PhysicsWorldHandler {
 public:
-	PhysicsWorldHandler(btDynamicsWorld* p_world, ControllerSystem* p_controllerSystem);
+	//PhysicsWorldHandler(btDynamicsWorld* p_world, ControllerSystem* p_controllerSystem);
+	PhysicsWorldHandler(btDynamicsWorld* p_world);
 
 	void physProcessCallback(btScalar timeStep);
 
@@ -38,7 +39,7 @@ public:
 
 protected:
 	// Might want to change this to generic list of a common base class
-	ControllerSystem* m_controllerSystem; // But right now, we only need it for the controllers
+	//ControllerSystem* m_controllerSystem; // But right now, we only need it for the controllers
 
 	std::vector<AdvancedEntitySystem*> m_orderIndependentSystems;
 	std::vector<AdvancedEntitySystem*> m_preprocessSystems;
