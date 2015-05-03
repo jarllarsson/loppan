@@ -648,3 +648,9 @@ BufferFactory* GraphicsDevice::getBufferFactoryRef()
 {
 	return m_bufferFactory;
 }
+
+void GraphicsDevice::contextFlush()
+{
+	if (m_deviceContext != NULL)
+		m_deviceContext->Flush();
+}

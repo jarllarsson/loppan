@@ -77,7 +77,7 @@ BufferConfig::BufferConfig(BUFFER_INIT_DESC& p_initDesc)
 
 	//Desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	m_bufferDesc.MiscFlags = 0;
-	m_bufferDesc.ByteWidth = p_initDesc.NumElements * p_initDesc.ElementSize;
+	m_bufferDesc.ByteWidth = elementCount * elementSize;
 
 	//set at least 16 bytes
 	if(m_bufferDesc.ByteWidth < 16)

@@ -73,6 +73,7 @@ public:
 	// States
 	// Clear render targets in a color
 	void clearRenderTargets();								///< Clear all rendertargets
+	void contextFlush();
 	void flipBackBuffer();									///< Fliparoo!
 
 	void updateResolution( int p_width, int p_height );		///< Update resolution

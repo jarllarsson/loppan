@@ -95,6 +95,7 @@ public:
 			}		
 			// remove the old buffer
 			SAFE_DELETE(m_instances);
+			m_graphicsDevice->contextFlush();
 		}
 		else
 		{
