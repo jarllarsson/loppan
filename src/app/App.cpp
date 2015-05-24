@@ -3,7 +3,7 @@
 #include "DebugDrawer.h" // DirectXTK stuff must be included before bullet stuff.. X(
 #include "DebugDrawBatch.h"
 #include "AdvancedEntitySystem.h"
-#include <Context.h>
+#include <DXContext.h>
 #include <ContextException.h>
 
 #include <GraphicsDevice.h>

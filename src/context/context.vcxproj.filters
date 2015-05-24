@@ -9,10 +9,12 @@
     <ClInclude Include="ContextException.h">
       <Filter>Exception</Filter>
     </ClInclude>
-    <ClInclude Include="Context.h" />
     <ClInclude Include="IContextProcessable.h" />
+    <ClInclude Include="DXContext.h" />
+    <ClInclude Include="GLFWContext.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Context.cpp" />
+    <ClCompile Include="DXContext.cpp" />
+    <ClCompile Include="GLFWContext.cpp" />
   </ItemGroup>
 </Project>

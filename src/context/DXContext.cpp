@@ -1,14 +1,16 @@
-#include "Context.h"
+#include "DXContext.h"
 #include "ContextException.h"
 #include <algorithm> 
 
-Context* Context::m_instance=NULL;
+DXContext* DXContext::m_instance=NULL;
 
-Context::Context( HINSTANCE p_hInstance, const string& p_title, 
+DXContext::DXContext( HINSTANCE p_hInstance, const string& p_title, 
 				 int p_width, int p_height )
 {
 	m_closeFlag=false;
 	m_sizeDirty=false;
+	m_width = max(1, p_width);
+	m_height = max(1, p_height);
 	m_hInstance = p_hInstance; 
 	m_title = p_title;
 
@@ -56,33 +58,33 @@ Context::Context( HINSTANCE p_hInstance, const string& p_title,
 	m_instance=this;
 }
 
-Context::~Context()
+DXContext::~DXContext()
 {
 	DestroyWindow(m_hWnd);
 }
 
-void Context::setTitle( const string& p_title )
+void DXContext::setTitle( const string& p_title )
 {
 	m_title=p_title;
 }
 
-void Context::updateTitle( const string& p_appendMsg )
+void DXContext::updateTitle( const string& p_appendMsg )
 {
 	SetWindowText(m_hWnd, (m_title+p_appendMsg).c_str());
 }
 
 
-HWND Context::getWindowHandle()
+HWND DXContext::getWindowHandle()
 {
 	return m_hWnd;
 }
 
-Context* Context::getInstance()
+DXContext* DXContext::getInstance()
 {
 	return m_instance;
 }
 
-void Context::resize( int p_w, int p_h, bool p_update)
+void DXContext::resize( int p_w, int p_h, bool p_update)
 {
 	m_width = max(1,p_w);
 	m_height = max(1,p_h);
@@ -90,34 +92,34 @@ void Context::resize( int p_w, int p_h, bool p_update)
 	m_sizeDirty=true;
 }
 
-bool Context::closeRequested() const
+bool DXContext::closeRequested() const
 {
 	return m_closeFlag;
 }
 
-void Context::close()
+void DXContext::close()
 {
 	m_closeFlag=true;
 }
 
-pair<int,int> Context::getSize()
+pair<int,int> DXContext::getSize()
 {
 	return pair<int,int>(m_width,m_height);
 }
 
-bool Context::isSizeDirty()
+bool DXContext::isSizeDirty()
 {
 	bool isDirty = m_sizeDirty;
 	m_sizeDirty=false;
 	return isDirty;
 }
 
-void Context::addSubProcess(IContextProcessable* p_proc)
+void DXContext::addSubProcess(IContextProcessable* p_proc)
 {
 	m_processors.push_back(p_proc);
 }
 
-bool Context::runSubProcesses(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+bool DXContext::runSubProcesses(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	for (unsigned int i = 0; i < m_processors.size(); i++)
 	{
@@ -128,7 +130,7 @@ bool Context::runSubProcesses(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 	return false; // none processed
 }
 
-void Context::removeSubProcessEntry(const IContextProcessable* p_proc)
+void DXContext::removeSubProcessEntry(const IContextProcessable* p_proc)
 {
 	for (unsigned int i = 0; i < m_processors.size(); i++)
 	{
@@ -144,7 +146,7 @@ LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
 	HDC hdc;
 
 	// First check all sub processes
-	Context* context = Context::getInstance();
+	DXContext* context = DXContext::getInstance();
 	bool doProcessEvent = !(context != NULL && context->runSubProcesses(hWnd, message, wParam, lParam));
 	// If context hasn't been created or no sub processes existed or used the event, doProcessEvent will be true
 

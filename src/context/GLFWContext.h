@@ -1,6 +1,5 @@
 #pragma once
 
-#include <windows.h>
 #include <string>
 #include <utility>
 #include "IContextProcessable.h"
@@ -8,29 +7,25 @@
 
 using namespace std;
 
-static LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam );
-
-
 // =======================================================================================
-//                                      Context
+//                                      GLFWContext
 // =======================================================================================
 
 ///---------------------------------------------------------------------------------------
-/// \brief	Window context for DirectX
+/// \brief	Window context for OpenGL, using GLFW
 ///        
-/// # Context
+/// # GLFWContext
 /// 
-/// 17-4-2013 Jarl Larsson
+/// 24-05-2015 Jarl Larsson
 ///---------------------------------------------------------------------------------------
 
-class Context
+class GLFWContext
 {
 public:
-	Context(HINSTANCE p_hInstance, const string& p_title,
-		int p_width, int p_height);
-	virtual ~Context();
-	HWND getWindowHandle();
-	static Context* getInstance();
+	GLFWContext(const string& p_title, int p_width, int p_height);
+	virtual ~GLFWContext();
+	// HWND getWindowHandle();
+	static GLFWContext* getInstance();
 
 	void close();
 
@@ -56,7 +51,7 @@ public:
 	/// \param p_appendMsg Optional message string to append to title
 	/// \return void
 	///-----------------------------------------------------------------------------------
-	void updateTitle(const string& p_appendMsg="");
+	void updateTitle(const string& p_appendMsg = "");
 
 	///-----------------------------------------------------------------------------------
 	/// Whether a closedown was requested
@@ -70,7 +65,7 @@ public:
 	///-----------------------------------------------------------------------------------
 	bool isSizeDirty();
 
-	pair<int,int> getSize();
+	pair<int, int> getSize();
 
 	///-----------------------------------------------------------------------------------
 	/// Add sub processor that needs to subscribe to windows events
@@ -89,6 +84,10 @@ public:
 	/// \return void
 	///-----------------------------------------------------------------------------------
 	bool runSubProcesses(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
+	
+	static void errorCallback(int error, const char* description);
+
 protected:
 private:
 	bool m_closeFlag;
@@ -96,9 +95,8 @@ private:
 	string m_title;
 	int m_width;
 	int m_height;
-	HINSTANCE	m_hInstance;
-	HWND		m_hWnd;
-	static Context* m_instance;
+	GLFWwindow* m_windowHandle;
+	static GLFWContext* m_instance;
 	//
 	std::vector<IContextProcessable*> m_processors;
 };
